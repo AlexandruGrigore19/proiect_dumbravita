@@ -1,0 +1,263 @@
+.subscription-page {
+    padding-top: 80px;
+    min-height: 100vh;
+    background-color: #f8fafc;
+}
+
+.subscription-header {
+    background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-dark) 100%);
+    color: white;
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.sub-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.sub-title {
+    font-size: 2.75rem;
+    margin-bottom: 1rem;
+}
+
+.sub-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.subscription-content {
+    padding: 4rem 1.5rem;
+}
+
+.subscription-intro {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 3rem;
+    margin-bottom: 4rem;
+    align-items: start;
+}
+
+.producer-mini-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.mini-producer-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.producer-mini-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.producer-mini-card p {
+    color: var(--text-gray);
+    font-size: 0.9rem;
+}
+
+.subscription-benefits {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.subscription-benefits h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-black);
+}
+
+.subscription-benefits ul {
+    list-style: none;
+}
+
+.subscription-benefits li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 1rem;
+    color: var(--text-gray);
+}
+
+.subscription-benefits li:last-child {
+    border-bottom: none;
+}
+
+.subscription-products {
+    margin-bottom: 4rem;
+}
+
+.subscription-products h2 {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-black);
+}
+
+.products-intro {
+    color: var(--text-gray);
+    margin-bottom: 2rem;
+}
+
+.sub-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.sub-product-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease;
+}
+
+.sub-product-item:has(input:checked) {
+    border-color: var(--primary-green);
+}
+
+.sub-product-item img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+}
+
+.sub-product-info {
+    flex: 1;
+}
+
+.sub-product-info h4 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.sub-product-info p {
+    font-size: 0.85rem;
+    color: var(--text-gray);
+}
+
+.checkbox-container {
+    display: block;
+    position: relative;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 24px;
+    width: 24px;
+    background-color: #e2e8f0;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.checkbox-container:hover input~.checkmark {
+    background-color: #cbd5e1;
+}
+
+.checkbox-container input:checked~.checkmark {
+    background-color: var(--primary-green);
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.checkbox-container input:checked~.checkmark:after {
+    display: block;
+}
+
+.checkbox-container .checkmark:after {
+    left: 9px;
+    top: 5px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.subscription-cta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-darker));
+    color: white;
+    padding: 2.5rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 3rem;
+}
+
+.cta-content h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.cta-content p {
+    opacity: 0.9;
+}
+
+.btn-large {
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+}
+
+.back-link-wrapper {
+    text-align: center;
+}
+
+.subscription-not-found {
+    padding-top: 150px;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .subscription-intro {
+        grid-template-columns: 1fr;
+    }
+
+    .subscription-cta {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+    }
+
+    .sub-title {
+        font-size: 2rem;
+    }
+}

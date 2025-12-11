@@ -1,0 +1,139 @@
+.producers-page {
+    padding-top: 80px;
+    /* Header height */
+    min-height: 100vh;
+    background-color: #f8fafc;
+}
+
+.producers-header {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-darker) 100%);
+    color: white;
+    padding: 4rem 0;
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.page-title {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.page-subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.producers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    padding-bottom: 4rem;
+}
+
+.producer-card-detailed {
+    display: flex;
+    background: white;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.3s ease;
+}
+
+.producer-card-detailed:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+}
+
+.producer-image-wrapper {
+    flex: 1;
+    min-width: 300px;
+}
+
+.producer-profile-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.producer-details {
+    flex: 2;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.producer-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.producer-name {
+    font-size: 2rem;
+    color: var(--text-black);
+}
+
+.producer-badge {
+    background: var(--bg-green-light);
+    color: var(--primary-dark);
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.producer-desc {
+    font-size: 1.05rem;
+    color: var(--text-gray);
+    margin-bottom: 2rem;
+    line-height: 1.7;
+}
+
+.producer-products-list {
+    margin-bottom: 2rem;
+}
+
+.producer-products-list h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--text-black);
+}
+
+.producer-products-list ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+}
+
+.producer-products-list li {
+    color: var(--primary-dark);
+    font-weight: 500;
+}
+
+.producer-footer {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.location-tag {
+    color: var(--text-gray);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+    .producer-card-detailed {
+        flex-direction: column;
+    }
+
+    .producer-image-wrapper {
+        height: 250px;
+    }
+}

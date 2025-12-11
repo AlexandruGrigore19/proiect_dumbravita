@@ -1,0 +1,116 @@
+.register-type-page {
+    min-height: 100vh;
+    padding-top: 100px;
+    background-color: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.register-container {
+    width: 100%;
+    max-width: 900px;
+    padding: 2rem;
+}
+
+.register-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    animation: fadeInDown 0.6s ease-out;
+}
+
+.register-title {
+    font-size: 2.5rem;
+    color: var(--text-black);
+    margin-bottom: 0.5rem;
+}
+
+.register-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-gray);
+}
+
+.register-cards-wrapper {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.register-card {
+    background: white;
+    padding: 3rem 2rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    flex: 1;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 2px solid transparent;
+}
+
+.register-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-green);
+}
+
+.producer-card:hover {
+    border-color: var(--accent-color);
+}
+
+.register-card-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.register-card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-black);
+}
+
+.register-card p {
+    color: var(--text-gray);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.register-benefits {
+    list-style: none;
+    text-align: left;
+    margin-bottom: 2rem;
+    padding-left: 1rem;
+}
+
+.register-benefits li {
+    margin-bottom: 0.5rem;
+    color: var(--text-gray);
+    font-size: 0.95rem;
+}
+
+.register-footer-link {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.register-footer-link a {
+    color: var(--text-gray);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.register-footer-link a:hover {
+    color: var(--primary-green);
+}
+
+@media (max-width: 768px) {
+    .register-cards-wrapper {
+        flex-direction: column;
+    }
+}
