@@ -87,6 +87,122 @@ export const api = {
     getProducers: async () => {
         const response = await fetch(`${BASE_URL}/api/producers`);
         return await handleResponse(response);
+    },
+
+    // ========== SHOPS (Buticuri) ==========
+    
+    getShops: async () => {
+        const response = await fetch(`${BASE_URL}/api/shops`);
+        return await handleResponse(response);
+    },
+
+    getShopById: async (shopId) => {
+        const response = await fetch(`${BASE_URL}/api/shops/${shopId}`);
+        return await handleResponse(response);
+    },
+
+    getMyShops: async () => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/shops/my/all`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return await handleResponse(response);
+    },
+
+    createShop: async (shopData) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/shops`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(shopData)
+        });
+        return await handleResponse(response);
+    },
+
+    updateShop: async (shopId, shopData) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/shops/${shopId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(shopData)
+        });
+        return await handleResponse(response);
+    },
+
+    deleteShop: async (shopId) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/shops/${shopId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return await handleResponse(response);
+    },
+
+    // ========== PRODUCTS (Produse) ==========
+
+    getProductsByShop: async (shopId) => {
+        const response = await fetch(`${BASE_URL}/api/products/shop/${shopId}`);
+        return await handleResponse(response);
+    },
+
+    createProduct: async (shopId, productData) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/products/shop/${shopId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(productData)
+        });
+        return await handleResponse(response);
+    },
+
+    syncProducts: async (shopId, products) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/products/shop/${shopId}/sync`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ products })
+        });
+        return await handleResponse(response);
+    },
+
+    updateProduct: async (productId, productData) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/products/${productId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(productData)
+        });
+        return await handleResponse(response);
+    },
+
+    deleteProduct: async (productId) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/products/${productId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return await handleResponse(response);
     }
 };
 
