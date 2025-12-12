@@ -36,10 +36,6 @@ const HeroSection = () => {
                     </div>
                 </div>
             </div>
-            <div className="hero-scroll-indicator">
-                <span>Scroll</span>
-                <div className="scroll-arrow">↓</div>
-            </div>
         </section>
     );
 };

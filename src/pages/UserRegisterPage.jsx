@@ -2,17 +2,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import './ProducerRegisterPage.css';
+import './UserRegisterPage.css';
 
-const ProducerRegisterPage = () => {
+const UserRegisterPage = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
         phone: '',
-        specialty: '',
-        location: '',
-        description: '',
         password: '',
         confirmPassword: ''
     });
@@ -39,18 +36,17 @@ const ProducerRegisterPage = () => {
         }
 
         try {
+            // Prepare data for API (exclude confirmPassword)
             const apiData = {
                 fullName: formData.fullName,
                 email: formData.email,
-                phone: formData.phone,
-                specialty: formData.specialty,
-                location: formData.location,
-                description: formData.description,
-                password: formData.password
+                password: formData.password,
+                phone: formData.phone
             };
 
-            const data = await api.registerProducer(apiData);
+            const data = await api.registerUser(apiData);
 
+            // Save token and user
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
 
@@ -65,11 +61,11 @@ const ProducerRegisterPage = () => {
     };
 
     return (
-        <div className="producer-register-page">
+        <div className="user-register-page">
             <div className="register-form-container">
                 <div className="form-header">
-                    <h1 className="form-title">Devino Partener Producător</h1>
-                    <p className="form-subtitle">Alătură-te comunității și vinde produsele tale locale.</p>
+                    <h1 className="form-title">Creează Cont Client</h1>
+                    <p className="form-subtitle">Bucură-te de produse proaspete, direct la tine acasă.</p>
                 </div>
 
                 {error && <div className="form-error">{error}</div>}
@@ -100,48 +96,13 @@ const ProducerRegisterPage = () => {
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="phone">Număr de Telefon</label>
+                        <label htmlFor="phone">Număr de Telefon (Opțional)</label>
                         <input
                             type="tel"
                             id="phone"
                             value={formData.phone}
                             onChange={handleChange}
                             placeholder="Ex: 0712 345 678"
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="specialty">Specialitate</label>
-                        <input
-                            type="text"
-                            id="specialty"
-                            value={formData.specialty}
-                            onChange={handleChange}
-                            placeholder="Ex: Legume Bio, Miere, Lactate"
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="location">Locația Fermei / Punct de Vânzare</label>
-                        <input
-                            type="text"
-                            id="location"
-                            value={formData.location}
-                            onChange={handleChange}
-                            placeholder="Ex: Str. Principală nr. 10, Dumbrăvița"
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="description">Descriere Scurtă (Opțional)</label>
-                        <input
-                            type="text"
-                            id="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            placeholder="Povestește-ne puțin despre produsele tale..."
                         />
                     </div>
 
@@ -170,9 +131,9 @@ const ProducerRegisterPage = () => {
                         />
                     </div>
 
-                    <div className="form-group checkbox-group">
-                        <input type="checkbox" id="terms" required />
-                        <label htmlFor="terms">Sunt de acord cu Termenii și Condițiile</label>
+                    <div className="form-group checkbox-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', display: 'flex' }}>
+                        <input type="checkbox" id="terms" required style={{ width: 'auto' }} />
+                        <label htmlFor="terms" style={{ fontWeight: 'normal' }}>Sunt de acord cu Termenii și Condițiile</label>
                     </div>
 
                     <button
@@ -180,7 +141,7 @@ const ProducerRegisterPage = () => {
                         className="btn btn-primary btn-block btn-submit"
                         disabled={loading}
                     >
-                        {loading ? 'Se procesează...' : 'Creează Cont Producător'}
+                        {loading ? 'Se creează contul...' : 'Creează Cont Client'}
                     </button>
                 </form>
 
@@ -192,5 +153,4 @@ const ProducerRegisterPage = () => {
     );
 };
 
-export default ProducerRegisterPage;
-
+export default UserRegisterPage;

@@ -21,7 +21,7 @@ const RegisterTypeSelection = () => {
                             <li>✓ Livrare la domiciliu</li>
                             <li>✓ Abonamente lunare</li>
                         </ul>
-                        <Link to="#" className="btn btn-primary btn-block">
+                        <Link to="/inregistrare/client" className="btn btn-primary btn-block">
                             Creează Cont Client
                         </Link>
                     </div>

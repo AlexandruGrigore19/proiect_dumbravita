@@ -1,11 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
 
 const Header = () => {
     const [scrolled, setScrolled] = useState(false);
+    const [user, setUser] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
+        // Initial check
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
+
         const handleScroll = () => {
             const isScrolled = window.scrollY > 50;
             if (isScrolled !== scrolled) {
@@ -13,9 +21,26 @@ const Header = () => {
             }
         };
 
+        const handleAuthChange = () => {
+            const storedUser = localStorage.getItem('user');
+            setUser(storedUser ? JSON.parse(storedUser) : null);
+        };
+
         window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        window.addEventListener('auth-change', handleAuthChange);
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('auth-change', handleAuthChange);
+        };
     }, [scrolled]);
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+        navigate('/');
+    };
 
     return (
         <header className={`header ${scrolled ? 'header-scrolled' : ''}`}>
@@ -27,11 +52,41 @@ const Header = () => {
                 <nav className="nav">
                     <ul className="nav-list">
                         <li><Link to="/" className="nav-link">Acasă</Link></li>
-                        <li><a href="/#story" className="nav-link">Poveste</a></li>
                         <li><a href="/#products" className="nav-link">Produse</a></li>
                         <li><Link to="/producatori" className="nav-link">Producători</Link></li>
-                        <li><a href="#" className="nav-link">Contact</a></li>
-                        <li><Link to="/autentificare" className="nav-link nav-link-auth">🔐 Autentificare</Link></li>
+
+                        {user ? (
+                            <li className="user-profile-menu">
+                                {user.role === 'producer' ? (
+                                    <Link to="/profil" className="user-profile" style={{ textDecoration: 'none' }}>
+                                        <div className="user-avatar">
+                                            {(user.imageUrl || (user.producer && (user.producer.imageUrl || user.producer.image_url))) ? (
+                                                <img src={user.imageUrl || user.producer.imageUrl || user.producer.image_url} alt="Avatar" />
+                                            ) : (
+                                                user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'
+                                            )}
+                                        </div>
+                                        <span className="user-name">{user.fullName || user.email}</span>
+                                    </Link>
+                                ) : (
+                                    <Link to="/profil-client" className="user-profile" style={{ textDecoration: 'none' }}>
+                                        <div className="user-avatar">
+                                            {(user.imageUrl || (user.producer && (user.producer.imageUrl || user.producer.image_url))) ? (
+                                                <img src={user.imageUrl || user.producer.imageUrl || user.producer.image_url} alt="Avatar" />
+                                            ) : (
+                                                user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'
+                                            )}
+                                        </div>
+                                        <span className="user-name">{user.fullName || user.email}</span>
+                                    </Link>
+                                )}
+                                <button onClick={handleLogout} className="btn-logout" title="Delogare">
+                                    🚪
+                                </button>
+                            </li>
+                        ) : (
+                            <li><Link to="/autentificare" className="nav-link nav-link-auth">🔐 Autentificare</Link></li>
+                        )}
                     </ul>
                 </nav>
             </div>

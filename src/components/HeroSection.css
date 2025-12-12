@@ -96,28 +96,7 @@
     letter-spacing: 1px;
 }
 
-.hero-scroll-indicator {
-    position: absolute;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    color: white;
-    opacity: 0.7;
-    animation: float 2s ease-in-out infinite;
-}
 
-.hero-scroll-indicator span {
-    display: block;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 0.5rem;
-}
-
-.scroll-arrow {
-    font-size: 1.5rem;
-}
 
 @keyframes fadeInUp {
     from {
@@ -131,17 +110,7 @@
     }
 }
 
-@keyframes float {
 
-    0%,
-    100% {
-        transform: translateX(-50%) translateY(0);
-    }
-
-    50% {
-        transform: translateX(-50%) translateY(-10px);
-    }
-}
 
 @media (max-width: 768px) {
     .hero-stats {

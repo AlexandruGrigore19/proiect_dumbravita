@@ -16,7 +16,7 @@ const AuthSelectionPage = () => {
                         <div className="auth-card-icon">🔐</div>
                         <h2>Ai deja cont?</h2>
                         <p>Accesează contul tău pentru a vedea istoricul comenzilor și abonamentele active.</p>
-                        <Link to="#" className="btn btn-primary btn-block">
+                        <Link to="/login" className="btn btn-primary btn-block">
                             Autentificare
                         </Link>
                     </div>
