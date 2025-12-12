@@ -1,4 +1,4 @@
-
+﻿
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
@@ -11,7 +11,12 @@ const ProfilePage = () => {
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
 
-    // Form states
+    // My shops
+    const [myShops, setMyShops] = useState([]);
+    const [editingShop, setEditingShop] = useState(null);
+    const [isCreatingNew, setIsCreatingNew] = useState(false);
+
+    // Form states for personal info
     const [personalInfo, setPersonalInfo] = useState({
         displayName: '',
         phone: '',
@@ -23,17 +28,17 @@ const ProfilePage = () => {
         newPassword: ''
     });
 
-    const [producerInfo, setProducerInfo] = useState({
+    // Shop form state
+    const [shopForm, setShopForm] = useState({
+        title: '',
+        description: '',
+        specialty: '',
         location: '',
         imageUrl: '',
-        description: '',
-        specialty: ''
+        products: []
     });
 
-    // Products state
-    const [products, setProducts] = useState([]);
-
-    // File input refs
+    // File input ref
     const mainImageRef = useRef(null);
     const productImageRefs = useRef({});
 
@@ -57,12 +62,6 @@ const ProfilePage = () => {
                 return;
             }
 
-            // Check localStorage for persisted data
-            const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-            if ((!userData.imageUrl && !userData.image_url) && (storedUser.imageUrl || storedUser.image_url)) {
-                userData.imageUrl = storedUser.imageUrl || storedUser.image_url;
-            }
-
             localStorage.setItem('user', JSON.stringify(userData));
             setUser(userData);
 
@@ -72,22 +71,23 @@ const ProfilePage = () => {
                 email: userData.email || ''
             });
 
-            const producer = userData.producer || {};
-            setProducerInfo({
-                location: producer.location || '',
-                imageUrl: producer.imageUrl || producer.image_url || userData.imageUrl || '',
-                description: producer.description || '',
-                specialty: producer.specialty || ''
-            });
-
-            // Load products from localStorage (since API might not store them yet)
-            const storedProducts = JSON.parse(localStorage.getItem(`producer_products_${userData.id}`) || '[]');
-            setProducts(storedProducts);
+            // Load my shops
+            await loadMyShops();
 
         } catch (err) {
-            setError('Nu s-au putut încărca datele profilului.');
+            setError('Nu s-au putut incarca datele profilului.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadMyShops = async () => {
+        try {
+            const data = await api.getMyShops();
+            const shops = Array.isArray(data) ? data : (data.data || data.shops || []);
+            setMyShops(shops);
+        } catch (err) {
+            console.log('Could not load shops:', err);
         }
     };
 
@@ -104,15 +104,18 @@ const ProfilePage = () => {
 
     const handleMainImageUpload = (e) => {
         handleFileUpload(e, (base64) => {
-            setProducerInfo({ ...producerInfo, imageUrl: base64 });
+            setShopForm({ ...shopForm, imageUrl: base64 });
         });
     };
 
     const handleProductImageUpload = (e, productId) => {
         handleFileUpload(e, (base64) => {
-            setProducts(products.map(p =>
-                p.id === productId ? { ...p, image: base64 } : p
-            ));
+            setShopForm({
+                ...shopForm,
+                products: shopForm.products.map(p =>
+                    p.id === productId ? { ...p, image: base64 } : p
+                )
+            });
         });
     };
 
@@ -124,55 +127,114 @@ const ProfilePage = () => {
             price: '',
             image: ''
         };
-        setProducts([...products, newProduct]);
+        setShopForm({
+            ...shopForm,
+            products: [...shopForm.products, newProduct]
+        });
     };
 
     const removeProduct = (productId) => {
-        setProducts(products.filter(p => p.id !== productId));
+        setShopForm({
+            ...shopForm,
+            products: shopForm.products.filter(p => p.id !== productId)
+        });
     };
 
     const updateProduct = (productId, field, value) => {
-        setProducts(products.map(p =>
-            p.id === productId ? { ...p, [field]: value } : p
-        ));
+        setShopForm({
+            ...shopForm,
+            products: shopForm.products.map(p =>
+                p.id === productId ? { ...p, [field]: value } : p
+            )
+        });
     };
 
-    const handleSaveAnnouncement = async (e) => {
+    const startNewShop = () => {
+        setIsCreatingNew(true);
+        setEditingShop(null);
+        setShopForm({
+            title: personalInfo.displayName || '',
+            description: '',
+            specialty: '',
+            location: '',
+            imageUrl: '',
+            products: []
+        });
+    };
+
+    const startEditShop = (shop) => {
+        setEditingShop(shop);
+        setIsCreatingNew(false);
+        setShopForm({
+            title: shop.name || shop.title || '',
+            description: shop.description || '',
+            specialty: shop.specialty || '',
+            location: shop.location || '',
+            imageUrl: shop.imageUrl || shop.image_url || '',
+            products: shop.products || []
+        });
+    };
+
+    const cancelEditing = () => {
+        setIsCreatingNew(false);
+        setEditingShop(null);
+        setShopForm({
+            title: '',
+            description: '',
+            specialty: '',
+            location: '',
+            imageUrl: '',
+            products: []
+        });
+    };
+
+    const handleSaveShop = async (e) => {
         e.preventDefault();
         setError('');
         setSuccessMsg('');
 
         try {
-            const updateData = {
-                fullName: personalInfo.displayName,
-                phone: personalInfo.phone
+            const shopData = {
+                name: shopForm.title,
+                description: shopForm.description,
+                specialty: shopForm.specialty,
+                location: shopForm.location,
+                // Try multiple field names for image
+                imageUrl: shopForm.imageUrl,
+                image_url: shopForm.imageUrl,
+                image: shopForm.imageUrl,
+                coverImage: shopForm.imageUrl,
+                products: shopForm.products
             };
 
-            await api.updateProfile(user.id, updateData);
-
-            let updatedUser = { ...user, ...updateData };
-
-            if (user.producer) {
-                const producerData = {
-                    location: producerInfo.location,
-                    imageUrl: producerInfo.imageUrl,
-                    description: producerInfo.description,
-                    specialty: producerInfo.specialty
-                };
-                await api.updateProducer(user.producer.id, producerData);
-                updatedUser.producer = { ...user.producer, ...producerData };
+            if (editingShop) {
+                // UPDATE existing shop (PUT)
+                await api.updateShop(editingShop.id, shopData);
+                setSuccessMsg('Shop-ul a fost actualizat cu succes!');
+            } else {
+                // CREATE new shop (POST)
+                await api.createShop(shopData);
+                setSuccessMsg('Shop-ul a fost creat si publicat cu succes!');
             }
 
-            // Save products to localStorage
-            localStorage.setItem(`producer_products_${user.id}`, JSON.stringify(products));
-
-            setSuccessMsg('Anunțul a fost salvat cu succes!');
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-            window.dispatchEvent(new Event('auth-change'));
-            setUser(updatedUser);
+            // Refresh shops list
+            await loadMyShops();
+            cancelEditing();
 
         } catch (err) {
-            setError(err.message || 'Eroare la salvarea anunțului');
+            setError(err.message || 'Eroare la salvarea shop-ului');
+        }
+    };
+
+    const handleDeleteShop = async (shopId) => {
+        if (!window.confirm('Esti sigur ca vrei sa stergi acest shop?')) return;
+
+        try {
+            await api.deleteShop(shopId);
+            setSuccessMsg('Shop-ul a fost sters!');
+            await loadMyShops();
+        } catch (err) {
+            setError(err.message || 'Eroare la stergerea shop-ului');
         }
     };
 
@@ -183,15 +245,17 @@ const ProfilePage = () => {
 
         try {
             await api.changePassword(passwordData);
-            setSuccessMsg('Parola a fost schimbată cu succes!');
+            setSuccessMsg('Parola a fost schimbata cu succes!');
             setPasswordData({ currentPassword: '', newPassword: '' });
         } catch (err) {
             setError(err.message || 'Eroare la schimbarea parolei');
         }
     };
 
-    if (loading) return <div className="loading-screen">Se încarcă profilul...</div>;
+    if (loading) return <div className="loading-screen">Se incarca profilul...</div>;
     if (!user) return null;
+
+    const showShopForm = isCreatingNew || editingShop;
 
     return (
         <div className="profile-page">
@@ -199,17 +263,13 @@ const ProfilePage = () => {
                 {/* Header Section */}
                 <div className="profile-header">
                     <div className="profile-avatar-wrapper">
-                        {producerInfo.imageUrl ? (
-                            <img src={producerInfo.imageUrl} alt="Profile" className="profile-avatar" />
-                        ) : (
-                            <div className="profile-avatar">
-                                {personalInfo.displayName ? personalInfo.displayName.charAt(0).toUpperCase() : 'P'}
-                            </div>
-                        )}
+                        <div className="profile-avatar">
+                            {personalInfo.displayName ? personalInfo.displayName.charAt(0).toUpperCase() : 'P'}
+                        </div>
                     </div>
                     <div className="profile-info">
-                        <h1 className="profile-name">{personalInfo.displayName || 'Producător'}</h1>
-                        <span className="profile-role">Partener Producător</span>
+                        <h1 className="profile-name">{personalInfo.displayName || 'Producator'}</h1>
+                        <span className="profile-role">Partener Producator</span>
                     </div>
                 </div>
 
@@ -218,224 +278,241 @@ const ProfilePage = () => {
                 {successMsg && <div className="form-success" style={{ textAlign: 'center', color: 'green', marginBottom: '1rem', padding: '1rem', background: '#dcfce7', borderRadius: '8px' }}>{successMsg}</div>}
 
                 <div className="settings-grid">
-                    {/* ANNOUNCEMENT BUILDER - First and most important */}
-                    <div className="settings-card full-width-card announcement-builder">
-                        <h3>🌿 Construiește-ți Anunțul</h3>
-                        <p className="card-subtitle">Așa cum completezi aici, așa va arăta pe pagina Producători pentru toți vizitatorii.</p>
+                    {/* MY SHOPS SECTION */}
+                    <div className="settings-card full-width-card">
+                        <h3>🛒 Shop-urile Mele</h3>
+                        <p className="card-subtitle">Creaza si gestioneaza shop-urile tale care vor aparea pe pagina Producatori.</p>
 
-                        <form onSubmit={handleSaveAnnouncement}>
-                            {/* Preview Card */}
-                            <div className="announcement-preview">
-                                <h4>Previzualizare Anunț</h4>
-                                <div className="producer-card-preview">
-                                    <div className="preview-image-section">
-                                        {producerInfo.imageUrl ? (
-                                            <img src={producerInfo.imageUrl} alt="Preview" />
-                                        ) : (
-                                            <div className="placeholder-image">📷 Adaugă o imagine</div>
-                                        )}
+                        {/* List of existing shops */}
+                        {myShops.length > 0 && !showShopForm && (
+                            <div className="my-announcements-list">
+                                {myShops.map(shop => (
+                                    <div key={shop.id} className="announcement-item">
+                                        <div className="announcement-item-image">
+                                            {(shop.imageUrl || shop.image_url) ? (
+                                                <img src={shop.imageUrl || shop.image_url} alt={shop.name || shop.title} />
+                                            ) : (
+                                                <div className="placeholder-thumb">📷</div>
+                                            )}
+                                        </div>
+                                        <div className="announcement-item-info">
+                                            <h4>{shop.name || shop.title}</h4>
+                                            <p>{shop.description?.substring(0, 100)}...</p>
+                                            <span className="announcement-badge">{shop.specialty || 'Produse'}</span>
+                                        </div>
+                                        <div className="announcement-item-actions">
+                                            <button className="btn btn-outline" onClick={() => startEditShop(shop)}>
+                                                ✏️ Editeaza
+                                            </button>
+                                            <button className="btn btn-danger" onClick={() => handleDeleteShop(shop.id)}>
+                                                🗑️ Sterge
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="preview-content">
-                                        <h3>{personalInfo.displayName || 'Numele Tău'}</h3>
-                                        <span className="preview-badge">{producerInfo.specialty || 'Produse Locale'}</span>
-                                        <p className="preview-desc">{producerInfo.description || 'Descrierea ta va apărea aici...'}</p>
-                                        <p className="preview-location">📍 {producerInfo.location || 'Locația ta'}</p>
-
-                                        {products.length > 0 && (
-                                            <div className="preview-products">
-                                                <strong>Produse:</strong>
-                                                <div className="mini-products-grid">
-                                                    {products.slice(0, 3).map(p => (
-                                                        <div key={p.id} className="mini-product">
-                                                            {p.image && <img src={p.image} alt={p.name} />}
-                                                            <span>{p.name || 'Produs'}</span>
-                                                        </div>
-                                                    ))}
-                                                    {products.length > 3 && <span className="more-products">+{products.length - 3} altele</span>}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
+                                ))}
                             </div>
+                        )}
 
-                            {/* Edit Fields */}
-                            <div className="announcement-editor">
-                                <div className="editor-section">
-                                    <label className="section-label">Imagine Principală</label>
-                                    <div className="image-upload-area">
-                                        {producerInfo.imageUrl && (
-                                            <div className="current-image">
-                                                <img src={producerInfo.imageUrl} alt="Current" />
-                                            </div>
-                                        )}
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            ref={mainImageRef}
-                                            onChange={handleMainImageUpload}
-                                            style={{ display: 'none' }}
-                                        />
-                                        <div className="upload-buttons">
-                                            <button type="button" className="btn btn-outline" onClick={() => mainImageRef.current.click()}>
-                                                📁 Încarcă din Fișiere
-                                            </button>
-                                            <button type="button" className="btn btn-outline" onClick={() => {
-                                                const url = prompt('Introdu URL-ul imaginii:', producerInfo.imageUrl);
-                                                if (url !== null) setProducerInfo({ ...producerInfo, imageUrl: url });
-                                            }}>
-                                                🔗 Adaugă din URL
-                                            </button>
+                        {/* Create new button */}
+                        {!showShopForm && (
+                            <button className="btn btn-add-product" onClick={startNewShop} style={{ marginTop: '1rem' }}>
+                                ➕ Creaza Shop Nou
+                            </button>
+                        )}
+
+                        {/* Shop Form */}
+                        {showShopForm && (
+                            <form onSubmit={handleSaveShop} className="announcement-form">
+                                <div className="form-header-row">
+                                    <h4>{editingShop ? '✏️ Editeaza Shop-ul' : '➕ Shop Nou'}</h4>
+                                    <button type="button" className="btn-cancel" onClick={cancelEditing}>✕ Anuleaza</button>
+                                </div>
+
+                                {/* Preview */}
+                                <div className="announcement-preview">
+                                    <h5>Previzualizare</h5>
+                                    <div className="producer-card-preview">
+                                        <div className="preview-image-section">
+                                            {shopForm.imageUrl ? (
+                                                <img src={shopForm.imageUrl} alt="Preview" />
+                                            ) : (
+                                                <div className="placeholder-image">📷 Adauga o imagine</div>
+                                            )}
+                                        </div>
+                                        <div className="preview-content">
+                                            <h3>{shopForm.title || 'Titlu Shop'}</h3>
+                                            <span className="preview-badge">{shopForm.specialty || 'Specialitate'}</span>
+                                            <p className="preview-desc">{shopForm.description || 'Descrierea ta...'}</p>
+                                            <p className="preview-location">📍 {shopForm.location || 'Locatia'}</p>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="editor-section">
-                                    <label className="section-label">Numele Afișat</label>
-                                    <input
-                                        type="text"
-                                        value={personalInfo.displayName}
-                                        onChange={(e) => setPersonalInfo({ ...personalInfo, displayName: e.target.value })}
-                                        placeholder="Ex: Ferma Bunicii Maria"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="editor-section">
-                                    <label className="section-label">Specialitatea Ta (pentru badge)</label>
-                                    <input
-                                        type="text"
-                                        value={producerInfo.specialty}
-                                        onChange={(e) => setProducerInfo({ ...producerInfo, specialty: e.target.value })}
-                                        placeholder="Ex: Legume Bio, Miere, Lactate"
-                                    />
-                                </div>
-
-                                <div className="editor-section">
-                                    <label className="section-label">Descriere / Povestea Ta</label>
-                                    <textarea
-                                        value={producerInfo.description}
-                                        onChange={(e) => setProducerInfo({ ...producerInfo, description: e.target.value })}
-                                        rows="4"
-                                        placeholder="Povestește-le clienților despre tine, ferma ta și pasiunea ta..."
-                                        className="form-textarea"
-                                    />
-                                </div>
-
-                                <div className="editor-section">
-                                    <label className="section-label">Locație</label>
-                                    <input
-                                        type="text"
-                                        value={producerInfo.location}
-                                        onChange={(e) => setProducerInfo({ ...producerInfo, location: e.target.value })}
-                                        placeholder="Ex: Strada Principală 10, Dumbrăvița"
-                                    />
-                                </div>
-
-                                {/* Products Section */}
-                                <div className="editor-section products-section">
-                                    <label className="section-label">Produsele Tale</label>
-                                    <p className="section-hint">Adaugă produsele pe care le vinzi. Fiecare produs va apărea în anunțul tău.</p>
-
-                                    {products.length === 0 ? (
-                                        <div className="no-products">
-                                            <p>Nu ai adăugat niciun produs încă.</p>
+                                {/* Form Fields */}
+                                <div className="announcement-editor">
+                                    <div className="editor-section">
+                                        <label className="section-label">Imagine Principala</label>
+                                        <div className="image-upload-area">
+                                            {shopForm.imageUrl && (
+                                                <div className="current-image">
+                                                    <img src={shopForm.imageUrl} alt="Current" />
+                                                </div>
+                                            )}
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                ref={mainImageRef}
+                                                onChange={handleMainImageUpload}
+                                                style={{ display: 'none' }}
+                                            />
+                                            <div className="upload-buttons">
+                                                <button type="button" className="btn btn-outline" onClick={() => mainImageRef.current.click()}>
+                                                    📁 Incarca din Fisiere
+                                                </button>
+                                                <button type="button" className="btn btn-outline" onClick={() => {
+                                                    const url = prompt('Introdu URL-ul imaginii:', shopForm.imageUrl);
+                                                    if (url !== null) setShopForm({ ...shopForm, imageUrl: url });
+                                                }}>
+                                                    🔗 Adauga din URL
+                                                </button>
+                                            </div>
                                         </div>
-                                    ) : (
-                                        <div className="products-list-editor">
-                                            {products.map((product, index) => (
-                                                <div key={product.id} className="product-edit-card">
-                                                    <div className="product-edit-header">
-                                                        <span>Produs #{index + 1}</span>
-                                                        <button type="button" className="btn-remove" onClick={() => removeProduct(product.id)}>
-                                                            ✕ Șterge
-                                                        </button>
-                                                    </div>
-                                                    <div className="product-edit-content">
-                                                        <div className="product-image-upload">
-                                                            {product.image ? (
-                                                                <img src={product.image} alt={product.name} />
-                                                            ) : (
-                                                                <div className="product-image-placeholder">📷</div>
-                                                            )}
-                                                            <input
-                                                                type="file"
-                                                                accept="image/*"
-                                                                onChange={(e) => handleProductImageUpload(e, product.id)}
-                                                                style={{ display: 'none' }}
-                                                                ref={el => productImageRefs.current[product.id] = el}
-                                                            />
-                                                            <button type="button" className="btn-small" onClick={() => productImageRefs.current[product.id]?.click()}>
-                                                                Încarcă Poză
+                                    </div>
+
+                                    <div className="editor-section">
+                                        <label className="section-label">Titlu Shop</label>
+                                        <input
+                                            type="text"
+                                            value={shopForm.title}
+                                            onChange={(e) => setShopForm({ ...shopForm, title: e.target.value })}
+                                            placeholder="Ex: Ferma Bunicii Maria"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="editor-section">
+                                        <label className="section-label">Specialitate (pentru badge)</label>
+                                        <input
+                                            type="text"
+                                            value={shopForm.specialty}
+                                            onChange={(e) => setShopForm({ ...shopForm, specialty: e.target.value })}
+                                            placeholder="Ex: Legume Bio, Miere, Lactate"
+                                        />
+                                    </div>
+
+                                    <div className="editor-section">
+                                        <label className="section-label">Descriere</label>
+                                        <textarea
+                                            value={shopForm.description}
+                                            onChange={(e) => setShopForm({ ...shopForm, description: e.target.value })}
+                                            rows="4"
+                                            placeholder="Povesteste despre produsele tale..."
+                                            className="form-textarea"
+                                        />
+                                    </div>
+
+                                    <div className="editor-section">
+                                        <label className="section-label">Locatie</label>
+                                        <input
+                                            type="text"
+                                            value={shopForm.location}
+                                            onChange={(e) => setShopForm({ ...shopForm, location: e.target.value })}
+                                            placeholder="Ex: Strada Principala 10, Dumbravita"
+                                        />
+                                    </div>
+
+                                    {/* Products */}
+                                    <div className="editor-section products-section">
+                                        <label className="section-label">Produse</label>
+
+                                        {shopForm.products.length === 0 ? (
+                                            <p className="no-products-text">Nu ai adaugat produse inca.</p>
+                                        ) : (
+                                            <div className="products-list-editor">
+                                                {shopForm.products.map((product, index) => (
+                                                    <div key={product.id} className="product-edit-card">
+                                                        <div className="product-edit-header">
+                                                            <span>Produs #{index + 1}</span>
+                                                            <button type="button" className="btn-remove" onClick={() => removeProduct(product.id)}>
+                                                                ✕ Sterge
                                                             </button>
                                                         </div>
-                                                        <div className="product-fields">
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Nume produs (ex: Roșii Cherry)"
-                                                                value={product.name}
-                                                                onChange={(e) => updateProduct(product.id, 'name', e.target.value)}
-                                                            />
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Descriere scurtă"
-                                                                value={product.description}
-                                                                onChange={(e) => updateProduct(product.id, 'description', e.target.value)}
-                                                            />
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Preț (ex: 12 lei/kg)"
-                                                                value={product.price}
-                                                                onChange={(e) => updateProduct(product.id, 'price', e.target.value)}
-                                                            />
+                                                        <div className="product-edit-content">
+                                                            <div className="product-image-upload">
+                                                                {product.image ? (
+                                                                    <img src={product.image} alt={product.name} />
+                                                                ) : (
+                                                                    <div className="product-image-placeholder">📷</div>
+                                                                )}
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    onChange={(e) => handleProductImageUpload(e, product.id)}
+                                                                    style={{ display: 'none' }}
+                                                                    ref={el => productImageRefs.current[product.id] = el}
+                                                                />
+                                                                <button type="button" className="btn-small" onClick={() => productImageRefs.current[product.id]?.click()}>
+                                                                    Incarca
+                                                                </button>
+                                                            </div>
+                                                            <div className="product-fields">
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Nume produs"
+                                                                    value={product.name}
+                                                                    onChange={(e) => updateProduct(product.id, 'name', e.target.value)}
+                                                                />
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Descriere scurta"
+                                                                    value={product.description}
+                                                                    onChange={(e) => updateProduct(product.id, 'description', e.target.value)}
+                                                                />
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Pret (ex: 12 lei/kg)"
+                                                                    value={product.price}
+                                                                    onChange={(e) => updateProduct(product.id, 'price', e.target.value)}
+                                                                />
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
+                                                ))}
+                                            </div>
+                                        )}
 
-                                    <button type="button" className="btn btn-add-product" onClick={addProduct}>
-                                        ➕ Adaugă Produs Nou
+                                        <button type="button" className="btn btn-add-product" onClick={addProduct}>
+                                            ➕ Adauga Produs
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="profile-actions" style={{ marginTop: '2rem' }}>
+                                    <button type="submit" className="btn btn-primary btn-large">
+                                        {editingShop ? '💾 Salveaza Modificarile' : '🚀 Publica Shop-ul'}
                                     </button>
                                 </div>
-                            </div>
-
-                            <div className="profile-actions" style={{ marginTop: '2rem' }}>
-                                <button type="submit" className="btn btn-primary btn-large">
-                                    💾 Salvează și Publică Anunțul
-                                </button>
-                            </div>
-                        </form>
+                            </form>
+                        )}
                     </div>
 
-                    {/* Account Data - Secondary */}
+                    {/* Account Data */}
                     <div className="settings-card">
                         <h3>Datele Contului</h3>
-                        <form onSubmit={handleSaveAnnouncement}>
-                            <div className="form-grid">
-                                <div className="form-group">
-                                    <label>Email</label>
-                                    <input
-                                        type="email"
-                                        value={personalInfo.email}
-                                        disabled
-                                        className="input-disabled"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Telefon</label>
-                                    <input
-                                        type="tel"
-                                        value={personalInfo.phone}
-                                        onChange={(e) => setPersonalInfo({ ...personalInfo, phone: e.target.value })}
-                                    />
-                                </div>
+                        <div className="form-grid">
+                            <div className="form-group">
+                                <label>Email</label>
+                                <input type="email" value={personalInfo.email} disabled className="input-disabled" />
                             </div>
-                            <div className="profile-actions">
-                                <button type="submit" className="btn btn-secondary">Salvează</button>
+                            <div className="form-group">
+                                <label>Nume</label>
+                                <input type="text" value={personalInfo.displayName} disabled className="input-disabled" />
                             </div>
-                        </form>
+                            <div className="form-group">
+                                <label>Telefon</label>
+                                <input type="tel" value={personalInfo.phone} disabled className="input-disabled" />
+                            </div>
+                        </div>
                     </div>
 
                     {/* Security */}
@@ -444,7 +521,7 @@ const ProfilePage = () => {
                         <form onSubmit={handlePasswordChange}>
                             <div className="form-grid">
                                 <div className="form-group">
-                                    <label>Parola Curentă</label>
+                                    <label>Parola Curenta</label>
                                     <input
                                         type="password"
                                         value={passwordData.currentPassword}
@@ -453,7 +530,7 @@ const ProfilePage = () => {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Parola Nouă</label>
+                                    <label>Parola Noua</label>
                                     <input
                                         type="password"
                                         value={passwordData.newPassword}
@@ -465,7 +542,7 @@ const ProfilePage = () => {
                             </div>
                             <div className="profile-actions">
                                 <button type="submit" className="btn btn-secondary">
-                                    Schimbă Parola
+                                    Schimba Parola
                                 </button>
                             </div>
                         </form>

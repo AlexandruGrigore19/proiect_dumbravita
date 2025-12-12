@@ -87,6 +87,82 @@ export const api = {
     getProducers: async () => {
         const response = await fetch(`${BASE_URL}/api/producers`);
         return await handleResponse(response);
+    },
+
+    deleteProducer: async (producerId) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/admin/producers/${producerId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return await handleResponse(response);
+    },
+
+    // Shop (Announcements) endpoints
+    createShop: async (shopData) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/shops`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(shopData)
+        });
+        return await handleResponse(response);
+    },
+
+    getShops: async () => {
+        const response = await fetch(`${BASE_URL}/api/shops`);
+        return await handleResponse(response);
+    },
+
+    updateShop: async (shopId, shopData) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/shops/${shopId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(shopData)
+        });
+        return await handleResponse(response);
+    },
+
+    deleteShop: async (shopId) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/shops/${shopId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return await handleResponse(response);
+    },
+
+    getMyShops: async () => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/shops/my`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return await handleResponse(response);
+    },
+
+    // Admin endpoints
+    adminDeleteShop: async (shopId) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/admin/shops/${shopId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return await handleResponse(response);
     }
 };
 
