@@ -207,14 +207,32 @@ const ProfilePage = () => {
                 products: shopForm.products
             };
 
+            let savedShopId;
+
             if (editingShop) {
                 // UPDATE existing shop (PUT)
                 await api.updateShop(editingShop.id, shopData);
+                savedShopId = editingShop.id;
                 setSuccessMsg('Shop-ul a fost actualizat cu succes!');
             } else {
                 // CREATE new shop (POST)
-                await api.createShop(shopData);
+                const result = await api.createShop(shopData);
+                // Try to get the new shop ID from response
+                savedShopId = result.shop?.id || result.id || result.shopId;
                 setSuccessMsg('Shop-ul a fost creat si publicat cu succes!');
+            }
+
+            // Save products to localStorage (backend doesn't support products yet)
+            if (savedShopId && shopForm.products.length > 0) {
+                localStorage.setItem(`shop_products_${savedShopId}`, JSON.stringify(shopForm.products));
+            } else if (savedShopId) {
+                // Clear products if empty
+                localStorage.removeItem(`shop_products_${savedShopId}`);
+            }
+
+            // Also save by name as fallback (in case we don't get ID back)
+            if (shopForm.title && shopForm.products.length > 0) {
+                localStorage.setItem(`shop_products_name_${shopForm.title}`, JSON.stringify(shopForm.products));
             }
 
             // Refresh shops list
