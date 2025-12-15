@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 import './Header.css';
 
 const Header = () => {
     const [scrolled, setScrolled] = useState(false);
     const [user, setUser] = useState(null);
+    const [showCartPopup, setShowCartPopup] = useState(false);
     const navigate = useNavigate();
+    const { items, getItemCount, removeItem } = useCart();
 
     useEffect(() => {
         // Initial check
@@ -42,6 +45,8 @@ const Header = () => {
         navigate('/');
     };
 
+    const itemCount = getItemCount();
+
     return (
         <header className={`header ${scrolled ? 'header-scrolled' : ''}`}>
             <div className="container header-inner">
@@ -52,8 +57,53 @@ const Header = () => {
                 <nav className="nav">
                     <ul className="nav-list">
                         <li><Link to="/" className="nav-link">Acasă</Link></li>
-                        <li><a href="/#products" className="nav-link">Produse</a></li>
+                        <li><Link to="/produse" className="nav-link">Produse</Link></li>
                         <li><Link to="/producatori" className="nav-link">Producători</Link></li>
+
+                        {/* Cart Icon */}
+                        <li
+                            className="cart-icon-wrapper"
+                            onMouseEnter={() => setShowCartPopup(true)}
+                            onMouseLeave={() => setShowCartPopup(false)}
+                        >
+                            <div className="cart-icon">
+                                🛒
+                                {itemCount > 0 && (
+                                    <span className="cart-badge">{itemCount}</span>
+                                )}
+                            </div>
+
+                            {/* Cart Popup on Hover */}
+                            {showCartPopup && (
+                                <div className="cart-popup">
+                                    <h4>Coșul tău</h4>
+                                    {items.length === 0 ? (
+                                        <p className="cart-empty">Coșul este gol</p>
+                                    ) : (
+                                        <>
+                                            <ul className="cart-popup-items">
+                                                {items.slice(0, 5).map(item => (
+                                                    <li key={item.id} className="cart-popup-item">
+                                                        <img src={item.image || 'https://via.placeholder.com/40'} alt={item.name} />
+                                                        <div className="cart-item-info">
+                                                            <span className="cart-item-name">{item.name}</span>
+                                                            <span className="cart-item-qty">x{item.quantity}</span>
+                                                        </div>
+                                                        <button
+                                                            className="cart-item-remove"
+                                                            onClick={(e) => { e.stopPropagation(); removeItem(item.id); }}
+                                                        >×</button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                            {items.length > 5 && (
+                                                <p className="cart-more">+{items.length - 5} produse...</p>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </li>
 
                         {user ? (
                             <li className="user-profile-menu">

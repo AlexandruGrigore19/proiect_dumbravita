@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import './ProducersPage.css';
 
@@ -152,32 +153,84 @@ const ProducersPage = () => {
         setEditError('');
     };
 
-    // Handle file upload for main image
-    const handleMainImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
+    // Compress image to reduce localStorage usage
+    const compressImage = (file, maxWidth = 400, quality = 0.6) => {
+        return new Promise((resolve) => {
             const reader = new FileReader();
-            reader.onloadend = () => {
-                setEditForm({ ...editForm, imageUrl: reader.result });
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Scale down if larger than maxWidth
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Convert to compressed JPEG
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                    resolve(compressedDataUrl);
+                };
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
+        });
+    };
+
+    // Handle file upload for main image (compressed)
+    const handleMainImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            try {
+                const compressedImage = await compressImage(file, 600, 0.7);
+                setEditForm({ ...editForm, imageUrl: compressedImage });
+            } catch (err) {
+                console.error('Error compressing image', err);
+                // Fallback to original
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setEditForm({ ...editForm, imageUrl: reader.result });
+                };
+                reader.readAsDataURL(file);
+            }
         }
     };
 
-    // Handle file upload for product image
-    const handleProductImageUpload = (e, productId) => {
+    // Handle file upload for product image (compressed)
+    const handleProductImageUpload = async (e, productId) => {
         const file = e.target.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
+            try {
+                const compressedImage = await compressImage(file, 300, 0.6);
                 setEditForm({
                     ...editForm,
                     products: editForm.products.map(p =>
-                        p.id === productId ? { ...p, image: reader.result } : p
+                        p.id === productId ? { ...p, image: compressedImage } : p
                     )
                 });
-            };
-            reader.readAsDataURL(file);
+            } catch (err) {
+                console.error('Error compressing product image', err);
+                // Fallback
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setEditForm({
+                        ...editForm,
+                        products: editForm.products.map(p =>
+                            p.id === productId ? { ...p, image: reader.result } : p
+                        )
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
         }
     };
 
@@ -233,21 +286,45 @@ const ProducersPage = () => {
 
             await api.updateShop(editingShop.id, shopData);
 
-            // Save products to localStorage
-            if (editForm.products.length > 0) {
-                localStorage.setItem(`shop_products_${editingShop.id}`, JSON.stringify(editForm.products));
-            } else {
-                localStorage.removeItem(`shop_products_${editingShop.id}`);
-            }
+            // Save products to localStorage with error handling
+            try {
+                if (editForm.products.length > 0) {
+                    localStorage.setItem(`shop_products_${editingShop.id}`, JSON.stringify(editForm.products));
+                } else {
+                    localStorage.removeItem(`shop_products_${editingShop.id}`);
+                }
 
-            // Save image to localStorage
-            if (editForm.imageUrl) {
-                localStorage.setItem(`shop_image_${editingShop.id}`, editForm.imageUrl);
-            }
+                // Save image to localStorage
+                if (editForm.imageUrl) {
+                    localStorage.setItem(`shop_image_${editingShop.id}`, editForm.imageUrl);
+                }
 
-            // Also save by name as fallback
-            if (editForm.title && editForm.products.length > 0) {
-                localStorage.setItem(`shop_products_name_${editForm.title}`, JSON.stringify(editForm.products));
+                // Also save by name as fallback
+                if (editForm.title && editForm.products.length > 0) {
+                    localStorage.setItem(`shop_products_name_${editForm.title}`, JSON.stringify(editForm.products));
+                }
+            } catch (storageErr) {
+                console.warn('localStorage quota exceeded, clearing old data...', storageErr);
+                // Try to clear some old data and retry
+                try {
+                    // Clear all shop product and image data to free space
+                    const keysToRemove = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key && (key.startsWith('shop_products_') || key.startsWith('shop_image_'))) {
+                            keysToRemove.push(key);
+                        }
+                    }
+                    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+                    // Now try saving again
+                    if (editForm.products.length > 0) {
+                        localStorage.setItem(`shop_products_${editingShop.id}`, JSON.stringify(editForm.products));
+                    }
+                } catch (retryErr) {
+                    console.error('Still cannot save to localStorage', retryErr);
+                    // Continue anyway - data is saved to backend
+                }
             }
 
             // Refresh shops
@@ -315,45 +392,60 @@ const ProducersPage = () => {
                                 </button>
                             )}
 
-                            <div className="producer-image-wrapper">
-                                <img
-                                    src={imgSrc || 'https://via.placeholder.com/400x300?text=Fermier+Local'}
-                                    alt={shop.name || shop.title}
-                                    className="producer-profile-img"
-                                    onError={(e) => {
-                                        e.target.src = 'https://via.placeholder.com/400x300?text=Imagine+Indisponibila';
-                                    }}
-                                />
-                            </div>
-                            <div className="producer-details">
-                                <div className="producer-head">
-                                    <h2 className="producer-name">{shop.name || shop.title || 'Shop'}</h2>
-                                    <span className="producer-badge">{shop.specialty || 'Produse Locale'}</span>
+                            {/* Shop Header: Image + Info */}
+                            <div className="shop-card-header">
+                                <div className="shop-thumb">
+                                    <img
+                                        src={imgSrc || 'https://via.placeholder.com/100x100?text=🏪'}
+                                        alt={shop.name || shop.title}
+                                        onError={(e) => {
+                                            e.target.src = 'https://via.placeholder.com/100x100?text=🏪';
+                                        }}
+                                    />
                                 </div>
-                                <p className="producer-desc">
-                                    {shop.description || 'Descriere indisponibila.'}
-                                </p>
+                                <div className="shop-header-info">
+                                    <div className="shop-header-top">
+                                        <h2 className="producer-name">{shop.name || shop.title || 'Shop'}</h2>
+                                        <span className="producer-badge">{shop.specialty || 'Produse Locale'}</span>
+                                    </div>
+                                    <p className="producer-desc">
+                                        {shop.description || 'Descriere indisponibila.'}
+                                    </p>
+                                    <div className="shop-header-meta">
+                                        <span className="location-tag">📍 {shop.location || 'Dumbravita'}</span>
+                                        <Link to={`/shop/${shop.id}`} className="btn btn-shop-detail">
+                                            Vezi Shop-ul →
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
 
-                                {/* Products Display */}
-                                {shop.products && shop.products.length > 0 && (
+                            {/* Products Section */}
+                            {shop.products && shop.products.length > 0 && (
+                                <div className="shop-card-products">
                                     <div className="producer-products-grid">
-                                        {shop.products.map(product => (
-                                            <div key={product.id} className="product-mini-card">
+                                        {shop.products.slice(0, 3).map(product => (
+                                            <Link
+                                                to={`/product/${product.id}`}
+                                                key={product.id}
+                                                className="product-mini-card"
+                                                style={{ textDecoration: 'none', color: 'inherit' }}
+                                            >
                                                 {product.image && <img src={product.image} alt={product.name} />}
                                                 <div className="product-mini-info">
                                                     <strong>{product.name}</strong>
-                                                    {product.description && <p className="product-desc-mini">{product.description}</p>}
                                                     {product.price && <span className="product-price">{product.price}</span>}
                                                 </div>
-                                            </div>
+                                            </Link>
                                         ))}
                                     </div>
-                                )}
-
-                                <div className="producer-footer">
-                                    <span className="location-tag">📍 {shop.location || 'Dumbravita'}</span>
+                                    {shop.products.length > 3 && (
+                                        <p className="more-products-notice">
+                                            +{shop.products.length - 3} produse în plus
+                                        </p>
+                                    )}
                                 </div>
-                            </div>
+                            )}
                         </div>
                     );
                 })}
@@ -491,6 +583,13 @@ const ProducersPage = () => {
                                                         placeholder="Pret (ex: 10 lei/kg)"
                                                         value={product.price}
                                                         onChange={(e) => updateProduct(product.id, 'price', e.target.value)}
+                                                    />
+                                                    <textarea
+                                                        placeholder="Descriere produs (optional)"
+                                                        value={product.description || ''}
+                                                        onChange={(e) => updateProduct(product.id, 'description', e.target.value)}
+                                                        rows="2"
+                                                        className="product-description-input"
                                                     />
                                                 </div>
                                             </div>

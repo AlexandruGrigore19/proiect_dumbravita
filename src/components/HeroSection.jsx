@@ -13,14 +13,6 @@ const HeroSection = () => {
                 <p className="hero-subtitle">
                     Bunătățuri autentice din inima Dumbrăviței, direct de la producătorii locali.
                 </p>
-                <div className="hero-buttons">
-                    <button className="btn btn-primary">
-                        🛒 Vezi Produsele
-                    </button>
-                    <button className="btn btn-secondary">
-                        📖 Povestea Noastră
-                    </button>
-                </div>
                 <div className="hero-stats">
                     <div className="stat">
                         <span className="stat-number">50+</span>

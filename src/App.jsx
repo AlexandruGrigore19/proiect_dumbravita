@@ -6,6 +6,9 @@ import ProductSection from './components/ProductSection';
 import ProducersTeaser from './components/ProducersTeaser';
 import Footer from './components/Footer';
 import ProducersPage from './pages/ProducersPage';
+import ProductsPage from './pages/ProductsPage';
+import ShopDetailPage from './pages/ShopDetailPage';
+import ProductDetailPage from './pages/ProductDetailPage';
 import ProducerDetails from './pages/ProducerDetails';
 import SubscriptionPage from './pages/SubscriptionPage';
 import AuthSelectionPage from './pages/AuthSelectionPage';
@@ -16,6 +19,7 @@ import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import ClientProfilePage from './pages/ClientProfilePage';
 import ScrollToTop from './components/ScrollToTop';
+import { CartProvider } from './context/CartContext';
 import './index.css';
 
 function Home() {
@@ -33,24 +37,29 @@ function Home() {
 
 function App() {
   return (
-    <Router>
-      <ScrollToTop />
-      <Header />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/producatori" element={<ProducersPage />} />
-        <Route path="/producatori/:id" element={<ProducerDetails />} />
-        <Route path="/producatori/:id/abonament" element={<SubscriptionPage />} />
-        <Route path="/autentificare" element={<AuthSelectionPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/inregistrare" element={<RegisterTypeSelection />} />
-        <Route path="/inregistrare/client" element={<UserRegisterPage />} />
-        <Route path="/inregistrare/producator" element={<ProducerRegisterPage />} />
-        <Route path="/profil" element={<ProfilePage />} />
-        <Route path="/profil-client" element={<ClientProfilePage />} />
-      </Routes>
-      <Footer />
-    </Router>
+    <CartProvider>
+      <Router>
+        <ScrollToTop />
+        <Header />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/produse" element={<ProductsPage />} />
+          <Route path="/producatori" element={<ProducersPage />} />
+          <Route path="/shop/:shopId" element={<ShopDetailPage />} />
+          <Route path="/product/:productId" element={<ProductDetailPage />} />
+          <Route path="/producatori/:id" element={<ProducerDetails />} />
+          <Route path="/producatori/:id/abonament" element={<SubscriptionPage />} />
+          <Route path="/autentificare" element={<AuthSelectionPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/inregistrare" element={<RegisterTypeSelection />} />
+          <Route path="/inregistrare/client" element={<UserRegisterPage />} />
+          <Route path="/inregistrare/producator" element={<ProducerRegisterPage />} />
+          <Route path="/profil" element={<ProfilePage />} />
+          <Route path="/profil-client" element={<ClientProfilePage />} />
+        </Routes>
+        <Footer />
+      </Router>
+    </CartProvider>
   );
 }
 

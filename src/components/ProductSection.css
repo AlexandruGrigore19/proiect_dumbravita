@@ -32,8 +32,10 @@
 
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .product-card {
@@ -43,13 +45,15 @@
 
 .product-image {
     position: relative;
-    height: 220px;
+    width: 100%;
+    height: 200px;
     overflow: hidden;
+    border-radius: 12px 12px 0 0;
 }
 
 .product-image img {
     width: 100%;
-    height: 100%;
+    height: 200px;
     object-fit: cover;
     transition: transform 0.4s ease;
 }
@@ -142,4 +146,67 @@
         max-width: 400px;
         margin: 0 auto;
     }
+}
+
+/* Additional styles for dynamic products */
+.loading-products {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.1rem;
+    padding: 3rem;
+}
+
+.no-products-home {
+    text-align: center;
+    padding: 3rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.no-products-home p {
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+
+.product-image-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-image-placeholder span {
+    font-size: 4rem;
+}
+
+.section-cta {
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.btn-light {
+    display: inline-block;
+    padding: 1rem 2rem;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--primary-dark);
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn-light:hover {
+    background: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.btn-lg {
+    padding: 1.1rem 2.5rem;
+    font-size: 1.1rem;
 }
