@@ -790,11 +790,36 @@
 /* Modal Footer */
 .edit-modal-footer {
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
     gap: 1rem;
     padding: 1.5rem 2rem;
     border-top: 1px solid #e2e8f0;
     background: #f8fafc;
+}
+
+.modal-footer-spacer {
+    flex: 1;
+}
+
+.btn-danger {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    transform: translateY(-1px);
+}
+
+.btn-danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .btn-secondary {

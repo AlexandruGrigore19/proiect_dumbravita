@@ -66,12 +66,12 @@ const Header = () => {
                             onMouseEnter={() => setShowCartPopup(true)}
                             onMouseLeave={() => setShowCartPopup(false)}
                         >
-                            <div className="cart-icon">
+                            <Link to="/cos" className="cart-icon">
                                 🛒
                                 {itemCount > 0 && (
                                     <span className="cart-badge">{itemCount}</span>
                                 )}
-                            </div>
+                            </Link>
 
                             {/* Cart Popup on Hover */}
                             {showCartPopup && (

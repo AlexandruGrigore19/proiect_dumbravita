@@ -134,6 +134,9 @@ const ShopDetailPage = () => {
                             <span className="shop-location">📍 {shop.location}</span>
                         )}
                     </div>
+                    <Link to={`/shop/${shopId}/abonare`} className="btn btn-subscribe">
+                        🔔 Abonează-te la acest shop
+                    </Link>
                 </div>
             </div>
 

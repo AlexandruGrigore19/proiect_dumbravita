@@ -604,6 +604,20 @@ const ProducersPage = () => {
                         </div>
 
                         <div className="edit-modal-footer">
+                            {/* Delete button - only for shop owner */}
+                            {editingShop && isOwner(editingShop) && (
+                                <button
+                                    className="btn btn-danger"
+                                    onClick={() => {
+                                        handleDeleteShop(editingShop.id, editForm.title);
+                                        cancelEditing();
+                                    }}
+                                    disabled={saving}
+                                >
+                                    🗑️ Șterge Shop-ul
+                                </button>
+                            )}
+                            <div className="modal-footer-spacer"></div>
                             <button className="btn btn-secondary" onClick={cancelEditing} disabled={saving}>
                                 Anuleaza
                             </button>

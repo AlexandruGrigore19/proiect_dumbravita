@@ -18,6 +18,8 @@ import UserRegisterPage from './pages/UserRegisterPage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import ClientProfilePage from './pages/ClientProfilePage';
+import CartPage from './pages/CartPage';
+import ShopSubscribePage from './pages/ShopSubscribePage';
 import ScrollToTop from './components/ScrollToTop';
 import { CartProvider } from './context/CartContext';
 import './index.css';
@@ -46,7 +48,9 @@ function App() {
           <Route path="/produse" element={<ProductsPage />} />
           <Route path="/producatori" element={<ProducersPage />} />
           <Route path="/shop/:shopId" element={<ShopDetailPage />} />
+          <Route path="/shop/:shopId/abonare" element={<ShopSubscribePage />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
+          <Route path="/cos" element={<CartPage />} />
           <Route path="/producatori/:id" element={<ProducerDetails />} />
           <Route path="/producatori/:id/abonament" element={<SubscriptionPage />} />
           <Route path="/autentificare" element={<AuthSelectionPage />} />
