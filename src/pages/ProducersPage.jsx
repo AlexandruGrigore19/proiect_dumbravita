@@ -254,6 +254,7 @@ const ProducersPage = () => {
         setEditError('');
 
         try {
+            // 1. Update shop info
             const shopData = {
                 name: editForm.title,
                 description: editForm.description,
@@ -261,50 +262,71 @@ const ProducersPage = () => {
                 location: editForm.location,
                 imageUrl: editForm.imageUrl,
                 image_url: editForm.imageUrl,
-                image: editForm.imageUrl,
-                products: editForm.products
+                image: editForm.imageUrl
             };
 
             await api.updateShop(editingShop.id, shopData);
 
-            // Save products to localStorage with error handling
+            // 2. Get existing products from API to compare
+            let existingProducts = [];
             try {
-                if (editForm.products.length > 0) {
-                    localStorage.setItem(`shop_products_${editingShop.id}`, JSON.stringify(editForm.products));
+                const productData = await api.getProductsByShop(editingShop.id);
+                existingProducts = productData.products || [];
+            } catch (err) {
+                console.warn('Could not fetch existing products:', err);
+            }
+
+            const existingIds = existingProducts.map(p => p.id);
+            const formIds = editForm.products.map(p => p.id);
+
+            // 3. Delete products that are no longer in the form
+            for (const existingProduct of existingProducts) {
+                if (!formIds.includes(existingProduct.id)) {
+                    try {
+                        await api.deleteProduct(existingProduct.id);
+                    } catch (err) {
+                        console.warn('Could not delete product:', err);
+                    }
+                }
+            }
+
+            // 4. Create or update products
+            for (const product of editForm.products) {
+                if (!product.name) continue; // Skip empty products
+
+                if (existingIds.includes(product.id)) {
+                    // Update existing product
+                    try {
+                        await api.updateProduct(product.id, {
+                            name: product.name,
+                            description: product.description || '',
+                            price: product.price,
+                            image: product.image
+                        });
+                    } catch (err) {
+                        console.warn('Could not update product:', err);
+                    }
                 } else {
-                    localStorage.removeItem(`shop_products_${editingShop.id}`);
+                    // Create new product
+                    try {
+                        await api.createProduct(editingShop.id, {
+                            name: product.name,
+                            description: product.description || '',
+                            price: product.price,
+                            image: product.image
+                        });
+                    } catch (err) {
+                        console.warn('Could not create product:', err);
+                    }
                 }
+            }
 
-                // Save image to localStorage
-                if (editForm.imageUrl) {
-                    localStorage.setItem(`shop_image_${editingShop.id}`, editForm.imageUrl);
-                }
-
-                // Also save by name as fallback
-                if (editForm.title && editForm.products.length > 0) {
-                    localStorage.setItem(`shop_products_name_${editForm.title}`, JSON.stringify(editForm.products));
-                }
-            } catch (storageErr) {
-                console.warn('localStorage quota exceeded, clearing old data...', storageErr);
-                // Try to clear some old data and retry
+            // 5. Save image to localStorage (for fallback display)
+            if (editForm.imageUrl) {
                 try {
-                    // Clear all shop product and image data to free space
-                    const keysToRemove = [];
-                    for (let i = 0; i < localStorage.length; i++) {
-                        const key = localStorage.key(i);
-                        if (key && (key.startsWith('shop_products_') || key.startsWith('shop_image_'))) {
-                            keysToRemove.push(key);
-                        }
-                    }
-                    keysToRemove.forEach(key => localStorage.removeItem(key));
-
-                    // Now try saving again
-                    if (editForm.products.length > 0) {
-                        localStorage.setItem(`shop_products_${editingShop.id}`, JSON.stringify(editForm.products));
-                    }
-                } catch (retryErr) {
-                    console.error('Still cannot save to localStorage', retryErr);
-                    // Continue anyway - data is saved to backend
+                    localStorage.setItem(`shop_image_${editingShop.id}`, editForm.imageUrl);
+                } catch (storageErr) {
+                    console.warn('Could not save image to localStorage:', storageErr);
                 }
             }
 

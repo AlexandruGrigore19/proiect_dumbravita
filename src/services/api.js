@@ -164,6 +164,53 @@ export const api = {
         return await handleResponse(response);
     },
 
+    createProduct: async (shopId, productData) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/products/shop/${shopId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                name: productData.name,
+                description: productData.description || '',
+                price: productData.price,
+                image_url: productData.image || productData.image_url || ''
+            })
+        });
+        return await handleResponse(response);
+    },
+
+    updateProduct: async (productId, productData) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/products/${productId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                name: productData.name,
+                description: productData.description || '',
+                price: productData.price,
+                image_url: productData.image || productData.image_url || ''
+            })
+        });
+        return await handleResponse(response);
+    },
+
+    deleteProduct: async (productId) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/products/${productId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return await handleResponse(response);
+    },
+
     // Admin endpoints
     adminDeleteShop: async (shopId) => {
         const token = localStorage.getItem('token');
