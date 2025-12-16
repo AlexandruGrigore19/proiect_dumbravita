@@ -29,43 +29,24 @@ const ProductDetailPage = () => {
     const fetchProductDetails = async () => {
         try {
             setLoading(true);
-            const data = await api.getShops();
-            const shopsList = Array.isArray(data) ? data : (data.data || data.shops || []);
-
-            let foundProduct = null;
-            let foundShop = null;
-
-            for (const s of shopsList) {
-                const apiProducts = s.products || [];
-                const matchedApi = apiProducts.find(p => String(p.id) === String(productId));
-
-                if (matchedApi) {
-                    foundProduct = matchedApi;
-                    foundShop = s;
-                    break;
-                }
-
-                let localProducts = [];
-                if (s.id) {
-                    const storedById = localStorage.getItem(`shop_products_${s.id}`);
-                    if (storedById) localProducts = JSON.parse(storedById);
-                }
-                if (!localProducts.length && s.name) {
-                    const storedByName = localStorage.getItem(`shop_products_name_${s.name}`);
-                    if (storedByName) localProducts = JSON.parse(storedByName);
-                }
-
-                const matchedLocal = localProducts.find(p => String(p.id) === String(productId));
-                if (matchedLocal) {
-                    foundProduct = matchedLocal;
-                    foundShop = s;
-                    break;
-                }
-            }
-
-            if (foundProduct) {
-                setProduct(foundProduct);
-                setShop(foundShop);
+            
+            // Use GET /api/products/:id to fetch product details
+            const data = await api.getProductById(productId);
+            
+            if (data.product) {
+                const productData = data.product;
+                // Map image_url to image for consistency
+                setProduct({
+                    ...productData,
+                    image: productData.image_url || productData.image
+                });
+                
+                // Set shop info from the product response
+                setShop({
+                    id: productData.shop_id,
+                    name: productData.shop_name,
+                    owner_id: productData.owner_id
+                });
             } else {
                 setError('Produsul nu a fost găsit.');
             }

@@ -22,52 +22,30 @@ const ProductsPage = () => {
             const data = await api.getShops();
             const shopsList = Array.isArray(data) ? data : (data.data || data.shops || []);
 
-            // Collect all products from all shops
+            // Collect all products from all shops using the API
             const products = [];
 
-            shopsList.forEach((shop) => {
-                // Get products from localStorage (by ID)
-                let localProducts = null;
+            // Fetch products for each shop using GET /api/products/shop/:shopId
+            for (const shop of shopsList) {
+                try {
+                    const productData = await api.getProductsByShop(shop.id);
+                    const shopProducts = productData.products || [];
 
-                if (shop.id) {
-                    const storedById = localStorage.getItem(`shop_products_${shop.id}`);
-                    if (storedById) {
-                        try {
-                            localProducts = JSON.parse(storedById);
-                        } catch (e) {
-                            console.error('Error parsing products', e);
-                        }
-                    }
-                }
-
-                // Fallback: try by name
-                if (!localProducts && shop.name) {
-                    const storedByName = localStorage.getItem(`shop_products_name_${shop.name}`);
-                    if (storedByName) {
-                        try {
-                            localProducts = JSON.parse(storedByName);
-                        } catch (e) {
-                            console.error('Error parsing products by name', e);
-                        }
-                    }
-                }
-
-                // Get products from API or localStorage
-                const shopProducts = (shop.products && shop.products.length > 0)
-                    ? shop.products
-                    : (localProducts || []);
-
-                // Add shop info to each product
-                shopProducts.forEach(product => {
-                    products.push({
-                        ...product,
-                        shopId: shop.id,
-                        shopName: shop.name || shop.title,
-                        shopSpecialty: shop.specialty,
-                        shopLocation: shop.location
+                    // Add shop info to each product
+                    shopProducts.forEach(product => {
+                        products.push({
+                            ...product,
+                            image: product.image_url || product.image,
+                            shopId: shop.id,
+                            shopName: shop.name || shop.title,
+                            shopSpecialty: shop.specialty,
+                            shopLocation: shop.location
+                        });
                     });
-                });
-            });
+                } catch (err) {
+                    console.error(`Failed to fetch products for shop ${shop.id}:`, err);
+                }
+            }
 
             setAllProducts(products);
         } catch (err) {

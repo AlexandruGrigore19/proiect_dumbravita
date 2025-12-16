@@ -42,48 +42,29 @@ const ProducersPage = () => {
             const data = await api.getShops();
             const shopsList = Array.isArray(data) ? data : (data.data || data.shops || []);
 
-            // 2. Enrich each shop with products from localStorage or API
-            const enrichedShops = shopsList.map((shop) => {
-                // Try to get products from localStorage first (by ID)
-                let localProducts = null;
-
-                if (shop.id) {
-                    const storedById = localStorage.getItem(`shop_products_${shop.id}`);
-                    if (storedById) {
-                        try {
-                            localProducts = JSON.parse(storedById);
-                        } catch (e) {
-                            console.error('Error parsing products from localStorage', e);
-                        }
-                    }
-                }
-
-                // Fallback: try by name
-                if (!localProducts && shop.name) {
-                    const storedByName = localStorage.getItem(`shop_products_name_${shop.name}`);
-                    if (storedByName) {
-                        try {
-                            localProducts = JSON.parse(storedByName);
-                        } catch (e) {
-                            console.error('Error parsing products from localStorage by name', e);
-                        }
-                    }
+            // 2. Enrich each shop with products from API
+            const enrichedShops = await Promise.all(shopsList.map(async (shop) => {
+                // Fetch products from API using GET /api/products/shop/:shopId
+                let apiProducts = [];
+                try {
+                    const productData = await api.getProductsByShop(shop.id);
+                    apiProducts = (productData.products || []).map(p => ({
+                        ...p,
+                        image: p.image_url || p.image
+                    }));
+                } catch (err) {
+                    console.error(`Failed to fetch products for shop ${shop.id}:`, err);
                 }
 
                 // Get local image if exists
                 let localImage = localStorage.getItem(`shop_image_${shop.id}`);
 
-                // If we have products from API, use those; otherwise use localStorage
-                const products = (shop.products && shop.products.length > 0)
-                    ? shop.products
-                    : (localProducts || []);
-
                 return {
                     ...shop,
-                    products,
+                    products: apiProducts,
                     localImageUrl: localImage
                 };
-            });
+            }));
 
             setShops(enrichedShops);
         } catch (err) {

@@ -153,6 +153,17 @@ export const api = {
         return await handleResponse(response);
     },
 
+    // Product endpoints
+    getProductsByShop: async (shopId) => {
+        const response = await fetch(`${BASE_URL}/api/products/shop/${shopId}`);
+        return await handleResponse(response);
+    },
+
+    getProductById: async (productId) => {
+        const response = await fetch(`${BASE_URL}/api/products/${productId}`);
+        return await handleResponse(response);
+    },
+
     // Admin endpoints
     adminDeleteShop: async (shopId) => {
         const token = localStorage.getItem('token');
